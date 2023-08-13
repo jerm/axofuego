@@ -15,22 +15,22 @@ logger.addHandler(logging.StreamHandler())
 
 
 
-# Create our own Pyro class, reversing high/low because cheap relay board
-class Pyro(DigitalOutputDevice):
+# Create our own Poofer class, reversing high/low because cheap relay board
+class Poofer(DigitalOutputDevice):
     def __init__(self, pin):
         DigitalOutputDevice.__init__(self, pin, active_high=False, initial_value=False)
 
-# Pyros
+# Poofers
 valves = [
     None,  # using 1-indexing to match pyro-relay board.
-    Pyro(17),  # outside right (from the fire station)
-    Pyro(22),  # middle right
-    Pyro(27),  # inside right
-    Pyro(4),   # inside left
-    Pyro(23),  # middle left
-    Pyro(24),  # outside left
-    Pyro(25),  # Tail
-    Pyro(9),   # extra
+    Poofer(17),  # outside right (from the fire station)
+    Poofer(22),  # middle right
+    Poofer(27),  # inside right
+    Poofer(4),   # inside left
+    Poofer(23),  # middle left
+    Poofer(24),  # outside left
+    Poofer(25),  # Tail
+    Poofer(9),   # extra
 ]
 
 # viewed from the fire pedestal
