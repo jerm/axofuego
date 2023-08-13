@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Detect Mouse/Touch Hold</title>
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div id="tail">TAIL FIRE</div>
+      <div id="out-left">FIRE</div>
+      <div id="mid-left">FIRE</div>
+      <div id="in-left">FIRE</div>
+      <div id="in-right">FIRE</div>
+      <div id="mid-right">FIRE</div>
+      <div id="out-right">FIRE</div>
+      <div id="sequence1">Seq1</div>
+      <div id="sequence2">Seq2</div>
+      <div id="all">ALL</div>
+      <p id="status">Ready For fire</p>
+    </div>
+    <!-- Script -->
+    <script>
+      //Create Initial References
+      let tail = document.getElementById("tail");
+      let outleft = document.getElementById("out-left");
+      let midleft = document.getElementById("mid-left");
+      let inleft = document.getElementById("in-left");
+      let inright = document.getElementById("in-right");
+      let midright = document.getElementById("mid-right");
+      let outright= document.getElementById("out-right");
+      let sequence1 = document.getElementById("sequence1");
+      let sequence2 = document.getElementById("sequence2");
+      let all = document.getElementById("all");
+      let status = document.getElementById("status");
+      let isMouseHold = true;
+      let timeoutref;
+      let deviceType = "";
+
+//	var intervalId = setInterval(function() {
+//	  alert("Interval reached every 5s")
+//	}, 5000);
+      //Events Object
+      let events = {
+        mouse: {
+          down: "mousedown",
+          up: "mouseup",
+        },
+        touch: {
+          down: "touchstart",
+          up: "touchend",
+        },
+      };
+      //Detect if the device is a touch device
+      const isTouchDevice = () => {
+        try {
+          //We try to create Touch Event (It would fail for desktops and throw error)
+          document.createEvent("TouchEvent");
+          deviceType = "touch";
+          return true;
+        } catch (e) {
+          deviceType = "mouse";
+          return false;
+        }
+      };
+      isTouchDevice();
+      //Function on mouse down
+      tail.addEventListener(events[deviceType].down, (e) => {
+        tailsocket = new WebSocket(
+            "wss://fire.axolotl.life/socket/tail"
+        );
+        e.preventDefault();
+        isMouseHold = true;
+        //Mouse down will be considered mouse hold if it is being held down for more than 1500ms
+            status.innerText = "Shooting Fire!!";
+      });
+      outleft.addEventListener(events[deviceType].down, (e) => {
+        outleftsocket = new WebSocket(
+            "wss://fire.axolotl.life/socket/left-outside"
+        );
+        e.preventDefault();
+        isMouseHold = true;
+        //Mouse down will be considered mouse hold if it is being held down for more than 1500ms
+        timeoutref = setTimeout(function () {
+          //If mouse is being held down do this
+          if (isMouseHold) {
+            status.innerText = "Shooting Fire!!";
+          }
+        }, 50);
+      });
+      midleft.addEventListener(events[deviceType].down, (e) => {
+        midleftsocket = new WebSocket(
+            "wss://fire.axolotl.life/socket/left-middle"
+        );
+        e.preventDefault();
+        isMouseHold = true;
+        //Mouse down will be considered mouse hold if it is being held down for more than 1500ms
+        timeoutref = setTimeout(function () {
+          //If mouse is being held down do this
+          if (isMouseHold) {
+            status.innerText = "Shooting Fire!!";
+          }
+        }, 50);
+      });
+      
+      inleft.addEventListener(events[deviceType].down, (e) => {
+        inleftsocket = new WebSocket(
+            "wss://fire.axolotl.life/socket/left-inside"
+        );
+        e.preventDefault();
+        isMouseHold = true;
+        //Mouse down will be considered mouse hold if it is being held down for more than 1500ms
+        timeoutref = setTimeout(function () {
+          //If mouse is being held down do this
+          if (isMouseHold) {
+            status.innerText = "Shooting Fire!!";
+          }
+        }, 50);
+      });
+      inright.addEventListener(events[deviceType].down, (e) => {
+        inrightsocket = new WebSocket(
+            "wss://fire.axolotl.life/socket/right-inside"
+        );
+        e.preventDefault();
+        isMouseHold = true;
+        //Mouse down will be considered mouse hold if it is being held down for more than 1500ms
+        timeoutref = setTimeout(function () {
+          //If mouse is being held down do this
+          if (isMouseHold) {
+            status.innerText = "Shooting Fire!!";
+          }
+        }, 50);
+      });
+      midright.addEventListener(events[deviceType].down, (e) => {
+        midrightsocket = new WebSocket(
+            "wss://fire.axolotl.life/socket/right-middle"
+        );
+        e.preventDefault();
+        isMouseHold = true;
+        //Mouse down will be considered mouse hold if it is being held down for more than 1500ms
+        timeoutref = setTimeout(function () {
+          //If mouse is being held down do this
+          if (isMouseHold) {
+            status.innerText = "Shooting Fire!!";
+          }
+        }, 50);
+      });
+      outright.addEventListener(events[deviceType].down, (e) => {
+        outrightsocket = new WebSocket(
+            "wss://fire.axolotl.life/socket/right-outside"
+        );
+        e.preventDefault();
+        isMouseHold = true;
+        //Mouse down will be considered mouse hold if it is being held down for more than 1500ms
+        timeoutref = setTimeout(function () {
+          //If mouse is being held down do this
+          if (isMouseHold) {
+            status.innerText = "Shooting Fire!!";
+          }
+        }, 50);
+      });
+      sequence1.addEventListener(events[deviceType].down, (e) => {
+        sequence1socket = new WebSocket(
+            "wss://fire.axolotl.life/socket/sequence1"
+        );
+        e.preventDefault();
+        isMouseHold = true;
+        //Mouse down will be considered mouse hold if it is being held down for more than 1500ms
+        timeoutref = setTimeout(function () {
+          //If mouse is being held down do this
+          if (isMouseHold) {
+            status.innerText = "Shooting Fire!!";
+          }
+        }, 50);
+      });
+      sequence2.addEventListener(events[deviceType].down, (e) => {
+        sequence2socket = new WebSocket(
+            "wss://fire.axolotl.life/socket/sequence2"
+        );
+        e.preventDefault();
+        isMouseHold = true;
+        //Mouse down will be considered mouse hold if it is being held down for more than 1500ms
+        timeoutref = setTimeout(function () {
+          //If mouse is being held down do this
+          if (isMouseHold) {
+            status.innerText = "Shooting Fire!!";
+          }
+        }, 50);
+      });
+      all.addEventListener(events[deviceType].down, (e) => {
+        allsocket = new WebSocket(
+            "wss://fire.axolotl.life/socket/all"
+        );
+        e.preventDefault();
+        isMouseHold = true;
+        //Mouse down will be considered mouse hold if it is being held down for more than 1500ms
+        timeoutref = setTimeout(function () {
+          //If mouse is being held down do this
+          if (isMouseHold) {
+            status.innerText = "Shooting Fire!!";
+          }
+        }, 50);
+      });
+      //Function on mouse up
+      //If mouse is released do this
+      tail.addEventListener(events[deviceType].up, function () {
+        //Clear the timeout
+        tailsocket.close();
+        clearTimeout(timeoutref);
+        status.innerText = "Ready for fire";
+      });
+      outleft.addEventListener(events[deviceType].up, function () {
+        //Clear the timeout
+        outleftsocket.close();
+        clearTimeout(timeoutref);
+        status.innerText = "Ready for fire";
+      });
+      midleft.addEventListener(events[deviceType].up, function () {
+        //Clear the timeout
+        midleftsocket.close();
+        clearTimeout(timeoutref);
+        status.innerText = "Ready for fire";
+      });
+      inleft.addEventListener(events[deviceType].up, function () {
+        //Clear the timein
+        inleftsocket.close();
+        clearTimeout(timeoutref);
+        status.innerText = "Ready for fire";
+      });
+      outright.addEventListener(events[deviceType].up, function () {
+        //Clear the timeout
+        outrightsocket.close();
+        clearTimeout(timeoutref);
+        status.innerText = "Ready for fire";
+      });
+      midright.addEventListener(events[deviceType].up, function () {
+        //Clear the timeout
+        midrightsocket.close();
+        clearTimeout(timeoutref);
+        status.innerText = "Ready for fire";
+      });
+      inright.addEventListener(events[deviceType].up, function () {
+        //Clear the timein
+        inrightsocket.close();
+        clearTimeout(timeoutref);
+        status.innerText = "Ready for fire";
+      });
+      all.addEventListener(events[deviceType].up, function () {
+        //Clear the timein
+        allsocket.close();
+        clearTimeout(timeoutref);
+        status.innerText = "Ready for fire";
+      });
+      sequence1.addEventListener(events[deviceType].up, function () {
+        //Clear the timein
+        sequence1socket.close();
+        clearTimeout(timeoutref);
+        status.innerText = "Ready for fire";
+      });
+      sequence2.addEventListener(events[deviceType].up, function () {
+        //Clear the timein
+        sequence2socket.close();
+        clearTimeout(timeoutref);
+        status.innerText = "Ready for fire";
+      });
+    </script>
+  </body>
+</html>
