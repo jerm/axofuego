@@ -5,7 +5,8 @@ import atexit
 from time import sleep
 
 from websockets.server import serve
-from  gpiozero import Button, LED, DigitalOutputDevice
+import websockets
+from gpiozero import Button, LED, DigitalOutputDevice, CPUTemperature
 
 
 import logging
@@ -85,13 +86,33 @@ async def ignition_timer2(flames, duration, repetitions):
         await asyncio.sleep(duration)
 
 
+async def get_cpu_temp():
+    global connected_clients
+    while True:
+        cputemp = CPUTemperature().temperature
+        print(f"reporting CPU temp as {cputemp}")
+        message = f"CPU Temperature: {cputemp:.1f} C"
+        # Send the message to all connected clients
+        for websocket in connected_clients:
+            try:
+                await websocket.send(message)
+            except:
+                print(f"Failed updating CPU temp for client: {websocket}")
+
+        # Wait for 10 seconds before sending the next update
+        await asyncio.sleep(10)
+
 def run_sequence(sequence):
     pass
 
-async def echo(websocket):
+async def handle_client(websocket):
     global valves, stalks
     logging.warning(websocket.path)
     endpoint = websocket.path.split('/')[2]
+    if endpoint == 'cputemp':
+        print("adding client to cputemp list")
+        # Add the client's WebSocket connection to the list of connected clients
+        connected_clients.add(websocket)
     if endpoint == 'sequence1':
         while not websocket.close_rcvd:
             coro = ignition_timer(websocket, [1,3,5],.375,3)
@@ -149,7 +170,7 @@ async def echo(websocket):
             logging.warning(f"stopping fire on all stalks!")
             for flame in valves[1:]:
                 flame.off()
-        except:
+        finally:
             logging.warning(f"EMERGENCY stopping fire on all stalks!")
             for flame in valves[1:]:
                 flame.off()
@@ -163,17 +184,31 @@ async def echo(websocket):
                 await websocket.send(message)
             valves[stalks[endpoint]].off()
             logging.warning(f"stopping fire on stalk {endpoint}")
-        except:
+        finally:
             valves[stalks[endpoint]].off()
 
+    try:
+        # Continuously listen for messages from the client (if necessary)
+        async for message in websocket:
+                pass
+    except websockets.exceptions.ConnectionClosed:
+        pass
+    finally:
+        if endpoint == 'cputemp':
+            # Remove the client's WebSocket connection when it is closed
+            connected_clients.remove(websocket)
+        else:
+            print("stop the fire")
 
-async def main():
-    async with serve(echo, "0.0.0.0", 8765):
-        await asyncio.Future()  # run forever
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    # Set to store connected WebSocket clients
+    connected_clients = set()
+    start_server = websockets.serve(handle_client, "0.0.0.0", 8765)
+    asyncio.get_event_loop().run_until_complete(asyncio.gather(start_server, get_cpu_temp()))
+    asyncio.get_event_loop().run_forever()
+
     exit(0)
     for valve in valves:
         if valve == None:
