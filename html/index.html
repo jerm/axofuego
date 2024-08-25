@@ -68,7 +68,7 @@
       };
       isTouchDevice();
       tempSocket = new WebSocket(
-          "wss://fire.axolotl.life/socket/cputemp"
+          "wss://axofuego.jerm.org/socket/cputemp"
       );
       tempSocket.onmessage = (event) => {
         cputemp.textContent = event.data;
@@ -76,7 +76,7 @@
       //Function on mouse down
       tail.addEventListener(events[deviceType].down, (e) => {
         tailsocket = new WebSocket(
-            "wss://fire.axolotl.life/socket/tail"
+            "wss://axofuego.jerm.org/socket/tail"
         );
         e.preventDefault();
         isMouseHold = true;
@@ -85,7 +85,7 @@
       });
       outleft.addEventListener(events[deviceType].down, (e) => {
         outleftsocket = new WebSocket(
-            "wss://fire.axolotl.life/socket/left-outside"
+            "wss://axofuego.jerm.org/socket/left-outside"
         );
         e.preventDefault();
         isMouseHold = true;
@@ -99,7 +99,7 @@
       });
       midleft.addEventListener(events[deviceType].down, (e) => {
         midleftsocket = new WebSocket(
-            "wss://fire.axolotl.life/socket/left-middle"
+            "wss://axofuego.jerm.org/socket/left-middle"
         );
         e.preventDefault();
         isMouseHold = true;
@@ -114,7 +114,7 @@
       
       inleft.addEventListener(events[deviceType].down, (e) => {
         inleftsocket = new WebSocket(
-            "wss://fire.axolotl.life/socket/left-inside"
+            "wss://axofuego.jerm.org/socket/left-inside"
         );
         e.preventDefault();
         isMouseHold = true;
@@ -128,7 +128,7 @@
       });
       inright.addEventListener(events[deviceType].down, (e) => {
         inrightsocket = new WebSocket(
-            "wss://fire.axolotl.life/socket/right-inside"
+            "wss://axofuego.jerm.org/socket/right-inside"
         );
         e.preventDefault();
         isMouseHold = true;
@@ -142,7 +142,7 @@
       });
       midright.addEventListener(events[deviceType].down, (e) => {
         midrightsocket = new WebSocket(
-            "wss://fire.axolotl.life/socket/right-middle"
+            "wss://axofuego.jerm.org/socket/right-middle"
         );
         e.preventDefault();
         isMouseHold = true;
@@ -156,7 +156,7 @@
       });
       outright.addEventListener(events[deviceType].down, (e) => {
         outrightsocket = new WebSocket(
-            "wss://fire.axolotl.life/socket/right-outside"
+            "wss://axofuego.jerm.org/socket/right-outside"
         );
         e.preventDefault();
         isMouseHold = true;
@@ -170,7 +170,7 @@
       });
       sequence1.addEventListener(events[deviceType].down, (e) => {
         sequence1socket = new WebSocket(
-            "wss://fire.axolotl.life/socket/sequence1"
+            "wss://axofuego.jerm.org/socket/sequence1"
         );
         e.preventDefault();
         isMouseHold = true;
@@ -184,7 +184,7 @@
       });
       sequence2.addEventListener(events[deviceType].down, (e) => {
         sequence2socket = new WebSocket(
-            "wss://fire.axolotl.life/socket/sequence2"
+            "wss://axofuego.jerm.org/socket/sequence2"
         );
         e.preventDefault();
         isMouseHold = true;
@@ -198,7 +198,7 @@
       });
       all.addEventListener(events[deviceType].down, (e) => {
         allsocket = new WebSocket(
-            "wss://fire.axolotl.life/socket/all"
+            "wss://axofuego.jerm.org/socket/all"
         );
         e.preventDefault();
         isMouseHold = true;
