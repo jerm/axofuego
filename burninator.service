@@ -1,0 +1,17 @@
+[Unit]
+Description=Axo the Burninator
+After=network.target
+
+[Service]
+User=pi
+Group=www-data
+WorkingDirectory=/home/pi/axo
+ExecStart=/home/pi/.pyenv/versions/axo-311/bin/python /home/pi/axo/burninate.py >> /tmp/axo.log 2>&1 
+Environment=PYTHONPATH="/home/pi/.pyenv/versions/axo-311/bin/python",HOME='/home/pi/axo/',PATH="/home/pi/.pyenv/versions/axo-39/bin/:/usr/bin:/bin"
+Umask=002
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+
