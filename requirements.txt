@@ -1,3 +1,4 @@
 websockets
 RPi.GPIO
 gpiozero
+evdev
