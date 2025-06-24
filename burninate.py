@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import logging
 import asyncio
 import atexit
 from time import sleep
@@ -7,14 +8,10 @@ from time import sleep
 from websockets.server import serve
 import websockets
 from gpiozero import Button, LED, DigitalOutputDevice, CPUTemperature
+from evdev import InputDevice, categorize, ecodes, KeyEvent, list_devices
 
-
-import logging
-logger = logging.getLogger('websockets')
-logger.setLevel(logging.INFO)
-logger.addHandler(logging.StreamHandler())
-
-
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename='burningator.log', level=logging.INFO)
 
 # Create our own Poofer class, reversing high/low because cheap relay board
 class Poofer(DigitalOutputDevice):
@@ -34,6 +31,18 @@ valves = [
     Poofer(9),   # extra
 ]
 
+buttons = {
+    "KEY_BACKSPACE": 1,
+    "KEY_KPASTERISK": 2,
+    "KEY_KP9": 3,
+    "KEY_KP6": 4,
+    "KEY_KP3": 5,
+    "KEY_KPDOT": 6,
+    "KEY_KP8": 7,
+    "KEY_KP5": 7,
+}
+
+
 # viewed from the fire pedestal
 stalks = {
     'right-outside': 1,
@@ -52,7 +61,94 @@ def allFireOff():
             continue
         valve.off()
 
+def allFireOn():
+    global valves
+    for valve in valves:
+        if not valve:
+            continue
+        valve.on()
+
 atexit.register(allFireOff)
+
+async def do_pattern():
+    websocket = None
+    while not STOP_PATTERN:
+        pattern1 = ignition_timer(websocket, [1,6], .2, 1, .4, 0)
+        pattern2 = ignition_timer(websocket, [2,5], .2, 1, .4, .5)
+        pattern3 = ignition_timer(websocket, [3,4], .2, 1, .4, 1)
+        pattern4 = ignition_timer(websocket, [7,], .2, 1, .4, 1.5)
+
+        task1 = asyncio.create_task(pattern1)
+        task2 = asyncio.create_task(pattern2)
+        task3 = asyncio.create_task(pattern3)
+        task4 = asyncio.create_task(pattern4)
+        await task1
+        await task2
+        await task3
+        await task4
+        await asyncio.sleep(0.01)
+
+# Action map example
+async def on_key_press(keycode):
+    global STOP_PATTERN
+    print(f"Key Pressed: {keycode}")
+    # Add per-key logic here
+    if keycode in buttons.keys():
+        logger.warning("Firing fire from {keycode}")
+        valves[buttons[keycode]].on()
+        print(f"Action: A was pressed")
+        return
+    if keycode == "KEY_ESC":
+        logger.warning("Stopping all fire")
+        allFireOff()
+    elif keycode == "KEY_KP0":
+        logger.warning("firing all poofers")
+        allFireOn()
+    elif keycode == "KEY_KP7":
+        STOP_PATTERN = False
+        #await do_pattern()
+    elif keycode == "KEY_KP1":
+        STOP_PATTERN = True
+    else:
+        print(f"UNKNOWN: key with code {keycode} was pressed")
+
+
+async def on_key_release(keycode):
+    global STOP_PATTERN
+    print(f"Key Released: {keycode}")
+    # Add per-key logic here
+    if keycode in buttons.keys():
+        valves[buttons[keycode]].off()
+        print("Action: A was released")
+        return
+    if keycode == "KEY_ESC":
+        logger.warning("Stopping all fire")
+        allFireOff()
+    elif keycode == "KEY_KP0":
+        logger.warning("Stopping all fire")
+        allFireOff()
+    elif keycode == "KEY_KP7":
+        STOP_PATTERN = True
+    else:
+        print(f"UNKNOWN key with code {keycode} was RELEASED")
+
+async def read_keyboard(dev):
+    async for event in dev.async_read_loop():
+        if event.type == ecodes.EV_KEY:
+            key_event = categorize(event)
+            keycode = key_event.keycode if isinstance(key_event.keycode, str) else key_event.keycode[0]
+            if key_event.keystate == KeyEvent.key_down:
+                await on_key_press(keycode)
+            elif key_event.keystate == KeyEvent.key_up:
+                await on_key_release(keycode)
+
+def find_keyboard_device():
+    devices = [InputDevice(path) for path in list_devices()]
+    for device in devices:
+        if device.name == 'CX 2.4G Wireless Receiver' and "input0" in device.phys:
+            return device
+    raise RuntimeError("Control Keypad Not Found")
+
 
 async def ignition_timer(websocket, flames, duration, repetitions=1, rep_delay=None, start_delay=0):
     print("ingition_timer_1")
@@ -69,7 +165,7 @@ async def ignition_timer(websocket, flames, duration, repetitions=1, rep_delay=N
         if repetitions > 1:
             await asyncio.sleep(rep_delay or duration)
 
-        if websocket.close_rcvd:
+        if websocket and websocket.close_rcvd:
             break
 
 async def ignition_timer2(flames, duration, repetitions):
@@ -102,12 +198,10 @@ async def get_cpu_temp():
         # Wait for 10 seconds before sending the next update
         await asyncio.sleep(10)
 
-def run_sequence(sequence):
-    pass
 
 async def handle_client(websocket):
-    global valves, stalks
-    logging.warning(websocket.path)
+    global valves, stalks, logger
+    logger.warning(websocket.path)
     endpoint = websocket.path.split('/')[2]
     if endpoint == 'cputemp':
         print("adding client to cputemp list")
@@ -167,23 +261,24 @@ async def handle_client(websocket):
                 flame.on()
             async for message in websocket:
                 await websocket.send(message)
-            logging.warning(f"stopping fire on all stalks!")
+            logger.warning(f"stopping fire on all stalks!")
             for flame in valves[1:]:
                 flame.off()
         finally:
-            logging.warning(f"EMERGENCY stopping fire on all stalks!")
+            logger.warning(f"EMERGENCY stopping fire on all stalks!")
             for flame in valves[1:]:
                 flame.off()
 
 
     elif endpoint in stalks.keys():
         try:
-            logging.warning(f"firing stalk {endpoint}")
+            logger.warning(f"firing stalk {endpoint}")
+            await asyncio.sleep(0.1)
             valves[stalks[endpoint]].on()
             async for message in websocket:
                 await websocket.send(message)
             valves[stalks[endpoint]].off()
-            logging.warning(f"stopping fire on stalk {endpoint}")
+            logger.warning(f"stopping fire on stalk {endpoint}")
         finally:
             valves[stalks[endpoint]].off()
 
@@ -203,10 +298,15 @@ async def handle_client(websocket):
 
 
 if __name__ == "__main__":
+    # setting up keypad
+    dev = find_keyboard_device()
+    print(f"Using input device: {dev.path} ({dev.name})")
+    dev.grab()
+
     # Set to store connected WebSocket clients
     connected_clients = set()
     start_server = websockets.serve(handle_client, "0.0.0.0", 8765)
-    asyncio.get_event_loop().run_until_complete(asyncio.gather(start_server, get_cpu_temp()))
+    asyncio.get_event_loop().run_until_complete(asyncio.gather(start_server, get_cpu_temp(), read_keyboard(dev)))
     asyncio.get_event_loop().run_forever()
 
     exit(0)
