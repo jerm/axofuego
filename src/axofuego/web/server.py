@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import json
+import time
 import websockets
 from websockets.server import serve
 from typing import Set, Optional
@@ -58,6 +59,8 @@ class WebServer:
             await self._handle_cputemp(websocket)
         elif endpoint == 'control':
             await self._handle_control(websocket)
+        elif endpoint == 'status':
+            await self._handle_status(websocket)
         elif endpoint == 'sequence1':
             await self._handle_sequence1(websocket)
         elif endpoint == 'sequence2':
@@ -99,6 +102,45 @@ class WebServer:
                 logger.error(f"CPU temp monitor error: {e}")
             
             await asyncio.sleep(10)
+    
+    async def _handle_status(self, websocket):
+        """Handle real-time system status updates."""
+        self.connected_clients.add(websocket)
+        try:
+            # Start status monitoring task
+            task = asyncio.create_task(self._status_monitor(websocket))
+            await websocket.wait_closed()
+        except websockets.exceptions.ConnectionClosed:
+            pass
+        finally:
+            self.connected_clients.discard(websocket)
+            if 'task' in locals():
+                task.cancel()
+    
+    async def _status_monitor(self, websocket):
+        """Monitor and send system status including GPIO states."""
+        while True:
+            try:
+                # Get complete system status
+                status = self.pyro_engine.get_all_status()
+                status_message = json.dumps({
+                    'type': 'status_update',
+                    'timestamp': time.time(),
+                    'poofers': status['poofers'],
+                    'emergency_stop': status['emergency_stop'],
+                    'pattern_status': {
+                        'playing': self.pattern_engine.is_playing,
+                        'current_pattern': self.pattern_engine.get_current_pattern_name(),
+                        'bpm': self.pattern_engine.get_bpm()
+                    }
+                })
+                await websocket.send(status_message)
+            except websockets.exceptions.ConnectionClosed:
+                break
+            except Exception as e:
+                logger.error(f"Status monitor error: {e}")
+            
+            await asyncio.sleep(0.1)  # Update 10x per second for responsive UI
     
     async def _handle_control(self, websocket):
         """Handle fire control commands via JSON messages."""

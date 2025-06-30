@@ -8,6 +8,46 @@
   </head>
   <body>
       <div id="cputemp">Waiting for CPU Temp....</div>
+      
+      <!-- GPIO Status Section -->
+      <div class="gpio-status">
+        <h3>GPIO Status</h3>
+        <div class="gpio-grid">
+          <div class="gpio-pin" id="gpio-pin-17">
+            <div class="pin-indicator" id="indicator-17"></div>
+            <span>Pin 17 (P1)</span>
+          </div>
+          <div class="gpio-pin" id="gpio-pin-22">
+            <div class="pin-indicator" id="indicator-22"></div>
+            <span>Pin 22 (P2)</span>
+          </div>
+          <div class="gpio-pin" id="gpio-pin-27">
+            <div class="pin-indicator" id="indicator-27"></div>
+            <span>Pin 27 (P3)</span>
+          </div>
+          <div class="gpio-pin" id="gpio-pin-4">
+            <div class="pin-indicator" id="indicator-4"></div>
+            <span>Pin 4 (P4)</span>
+          </div>
+          <div class="gpio-pin" id="gpio-pin-23">
+            <div class="pin-indicator" id="indicator-23"></div>
+            <span>Pin 23 (P5)</span>
+          </div>
+          <div class="gpio-pin" id="gpio-pin-24">
+            <div class="pin-indicator" id="indicator-24"></div>
+            <span>Pin 24 (P6)</span>
+          </div>
+          <div class="gpio-pin" id="gpio-pin-25">
+            <div class="pin-indicator" id="indicator-25"></div>
+            <span>Pin 25 (P7)</span>
+          </div>
+          <div class="gpio-pin" id="gpio-pin-9">
+            <div class="pin-indicator" id="indicator-9"></div>
+            <span>Pin 9 (P8)</span>
+          </div>
+        </div>
+      </div>
+      
     <div class="container">
       <div id="tail">TAIL FIRE</div>
       <div id="out-left">FIRE</div>
@@ -100,6 +140,70 @@
       controlSocket.onerror = (error) => {
         console.error('Control WebSocket error:', error);
       };
+
+      // Status WebSocket for real-time GPIO visualization
+      let statusSocket = new WebSocket(
+          `${WS_PROTOCOL}//${WS_HOST}:${WS_PORT}/fire/status`
+      );
+      
+      statusSocket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'status_update') {
+            // Only log when there's actual activity
+            const anyActive = Object.values(data.poofers || {}).some(p => p.active);
+            if (anyActive) {
+              console.log('🔥 GPIO Activity:', data.poofers);
+            }
+            updateGPIOVisualization(data.poofers);
+            updatePatternStatus(data.pattern_status);
+          }
+        } catch (e) {
+          console.error('Failed to parse status message:', e);
+        }
+      };
+      
+      statusSocket.onclose = (event) => {
+        console.log('Status connection closed');
+      };
+      
+      statusSocket.onerror = (error) => {
+        console.error('Status WebSocket error:', error);
+      };
+
+      // GPIO pin mapping (pin -> poofer ID)
+      const pinToPoofer = {
+        17: 1, 22: 2, 27: 3, 4: 4, 23: 5, 24: 6, 25: 7, 9: 8
+      };
+
+      // Update GPIO visualization based on poofer states
+      function updateGPIOVisualization(poofers) {
+        if (!poofers) return;
+        
+        for (const [pin, pooferId] of Object.entries(pinToPoofer)) {
+          const indicator = document.getElementById(`indicator-${pin}`);
+          if (indicator && poofers[pooferId]) {
+            const isActive = poofers[pooferId].active;
+            
+            // Force a visual change for debugging
+            if (isActive) {
+              indicator.style.backgroundColor = '#ff4444';
+              indicator.style.borderColor = '#ff6666';
+              indicator.style.boxShadow = '0 0 10px #ff4444';
+            } else {
+              indicator.style.backgroundColor = '#333';
+              indicator.style.borderColor = '#666';
+              indicator.style.boxShadow = 'none';
+            }
+          }
+        }
+      }
+
+      // Update pattern status display
+      function updatePatternStatus(patternStatus) {
+        // Could add pattern status indicators here in the future
+        console.log('Pattern status:', patternStatus);
+      }
 
       // Helper function to send fire control command
       function sendFireCommand(action, target) {

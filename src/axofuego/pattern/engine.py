@@ -25,6 +25,7 @@ class PatternEngine:
         self._pattern_loop_count = 0
         
         self._playback_task: Optional[asyncio.Task] = None
+        self._stop_event = asyncio.Event()
         
         # Callback for pattern events
         self._on_pattern_event: Optional[Callable] = None
@@ -137,6 +138,14 @@ class PatternEngine:
     def set_event_callback(self, callback: Callable) -> None:
         """Set callback function for pattern events."""
         self._on_pattern_event = callback
+    
+    def get_current_pattern_name(self) -> str:
+        """Get the name of the currently playing pattern."""
+        return self._current_pattern.name if self._current_pattern else "none"
+    
+    def get_bpm(self) -> float:
+        """Get the current BPM setting."""
+        return float(self._bpm)
     
     async def _playback_loop(self) -> None:
         """Main playback loop running in separate thread."""
