@@ -2,3 +2,4 @@ websockets
 RPi.GPIO
 gpiozero
 evdev
+python-dotenv
