@@ -18,6 +18,30 @@ class Poofer(DigitalOutputDevice):
     def __init__(self, pin):
         DigitalOutputDevice.__init__(self, pin, active_high=False, initial_value=False)
 
+
+button = Button(20)
+
+async def button_detection():
+    print("button_detection started")
+    is_fire = False
+    try:
+        while True:
+            if button.is_pressed:
+                if not is_fire:
+                    is_fire = True
+                    allFireOn()
+                    print("Macic Button pressed")
+            else:
+                if is_fire:
+                    is_fire = False
+                    allFireOff()
+                    print("Macic Button released")
+            await asyncio.sleep(0.01)
+
+    except Exception as e:
+        print(e)
+
+
 # Poofers
 valves = [
     None,  # using 1-indexing to match pyro-relay board.
@@ -306,7 +330,7 @@ if __name__ == "__main__":
     # Set to store connected WebSocket clients
     connected_clients = set()
     start_server = websockets.serve(handle_client, "0.0.0.0", 8765)
-    asyncio.get_event_loop().run_until_complete(asyncio.gather(start_server, get_cpu_temp(), read_keyboard(dev)))
+    asyncio.get_event_loop().run_until_complete(asyncio.gather(start_server, get_cpu_temp(), read_keyboard(dev),,button_detection()))
     asyncio.get_event_loop().run_forever()
 
     exit(0)
